@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
-#
-# Tencent is pleased to support the open source community by making 蓝鲸智云PaaS平台社区版 (BlueKing PaaS Community Edition) available.
-# Copyright (C) 2017-2019 THL A29 Limited, a Tencent company. All rights reserved.
-# Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://opensource.org/licenses/MIT
-#
-# Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
-# an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
-# specific language governing permissions and limitations under the License.
-#
+"""
+Tencent is pleased to support the open source community by making 蓝鲸智云PaaS平台社区版 (BlueKing PaaS Community
+Edition) available.
+Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
+Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://opensource.org/licenses/MIT
+
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+specific language governing permissions and limitations under the License.
+"""
 import json
 import logging
 
@@ -36,7 +37,6 @@ from backend.utils.basic import normalize_datetime
 from backend.utils.cache import region
 from backend.utils.errcodes import ErrorCode
 from backend.utils.error_codes import error_codes
-from backend.utils.func_controller import get_func_controller
 from backend.utils.renderers import BKAPIRenderer
 
 from . import serializers
@@ -65,20 +65,6 @@ class Projects(viewsets.ViewSet):
                 return []
         return deploy_type_list
 
-    def _register_function_controller(self, func_code, project_list):
-        enabled, wlist = get_func_controller(func_code)
-        for project in project_list:
-            # 黑名单控制
-            if project["project_id"] in wlist:
-                continue
-
-            project["func_wlist"].add(func_code)
-
-    def register_function_controller(self, project_list):
-        """注册功能白名单"""
-        for func_code in getattr(settings, "PROJECT_FUNC_CODES", []):
-            self._register_function_controller(func_code, project_list)
-
     def list(self, request):
         """获取项目列表"""
         # 获取已经授权的项目
@@ -100,10 +86,6 @@ class Projects(viewsets.ViewSet):
             )
             info["project_code"] = info["english_name"]
             info["deploy_type"] = self.deploy_type_list(info.get("deploy_type"))
-            info["func_wlist"] = set()
-
-        # 白名单用于控制mesos集群是否开启了service monitor组件
-        self.register_function_controller(data)
 
         return Response(data)
 
@@ -129,10 +111,7 @@ class Projects(viewsets.ViewSet):
 
     def info(self, request, project_id):
         """单个项目信息"""
-        project_resp = paas_cc.get_project(request.user.token.access_token, project_id)
-        if project_resp.get("code") != ErrorCode.NoError:
-            raise error_codes.APIError(f'not found project info, {project_resp.get("message")}')
-        data = project_resp["data"]
+        data = request.project
         data["created_at"], data["updated_at"] = self.normalize_create_update_time(
             data["created_at"], data["updated_at"]
         )

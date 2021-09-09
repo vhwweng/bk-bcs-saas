@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
-#
-# Tencent is pleased to support the open source community by making 蓝鲸智云PaaS平台社区版 (BlueKing PaaS Community Edition) available.
-# Copyright (C) 2017-2019 THL A29 Limited, a Tencent company. All rights reserved.
-# Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://opensource.org/licenses/MIT
-#
-# Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
-# an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
-# specific language governing permissions and limitations under the License.
-#
+"""
+Tencent is pleased to support the open source community by making 蓝鲸智云PaaS平台社区版 (BlueKing PaaS Community
+Edition) available.
+Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. All rights reserved.
+Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://opensource.org/licenses/MIT
+
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+specific language governing permissions and limitations under the License.
+"""
 import json
 import time
 
@@ -19,14 +20,14 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from backend.apps import constants
 from backend.components import data as data_api
 from backend.components import paas_cc
 from backend.container_service.clusters import constants as cluster_constants
 from backend.container_service.clusters.models import ClusterInstallLog, NodeLabel, NodeStatus, NodeUpdateLog
 from backend.utils.errcodes import ErrorCode
-from backend.utils.error_codes import error_codes
-from backend.utils.exceptions import ResNotFoundError
+
+# metrics 默认时间 1小时
+METRICS_DEFAULT_TIMEDELTA = 3600
 
 
 class NodeLabelSLZ(serializers.ModelSerializer):
@@ -252,7 +253,7 @@ class MetricsSLZBase(serializers.Serializer):
             data['start_at'] = arrow.get(data['start_at']).timestamp * 1000
         else:
             # default one hour
-            data['start_at'] = now - constants.METRICS_DEFAULT_TIMEDELTA * 1000
+            data['start_at'] = now - METRICS_DEFAULT_TIMEDELTA * 1000
         # handle the end_at
         if 'end_at' in data:
             data['end_at'] = arrow.get(data['end_at']).timestamp * 1000
